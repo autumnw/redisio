@@ -1,8 +1,8 @@
 #
-# Cookbook Name:: sensu
+# Cookbook Name:: redisio
 # Recipe:: redis_healthcheck
 #
-# Copyright 2014, Autodesk Inc.
+# Copyright 2015
 #
 # This recipe is setting up the health check for two-node master-slave 
 # redis cluster which will use a load balancer in front of two nodes.
@@ -28,7 +28,7 @@ template "/usr/sbin/redis-role.sh" do
 end
 
 execute "add_service_port_10240" do
-  command "echo 'redischk        10240/tcp               # redis role monitoring' > /etc/services"
+  command "echo 'redischk        10240/tcp               # redis role monitoring' >> /etc/services"
   not_if "grep '10240' /etc/services  | grep redischk" 
   notifies :restart, "service[xinetd]", :delayed
 end
