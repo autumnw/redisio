@@ -21,8 +21,9 @@ EXEC="runuser <%= @user %> -c \"<%= File.join(@bin_path, 'redis-server') %> <%= 
 <% end %>
 CLIEXEC=<%= File.join(@bin_path, 'redis-cli') %>
 
-
 PIDFILE=<%= @piddir %>/sentinel_${SENTINELNAME}.pid
+
+PID=`ps -ef | grep 'redis' | grep ':26379' | awk '{print $2}'`
 
 if [ ! -d <%= @piddir %> ]; then
     mkdir -p <%= @piddir %>
@@ -31,31 +32,32 @@ fi
 
 case "$1" in
     status)
-        if [ -f $PIDFILE ]
+        if [ ! X"$PID" = X ]
         then
-          echo "redis$SENTINELNAME $PIDFILE exists, pid is $(cat $PIDFILE), should be running"
-          ps -p $(cat $PIDFILE) >/dev/null 2>&1
-          exit $?
+          echo "redis$SENTINELNAME $PIDFILE exists, pid is ($PID), should be running"
+          exit 0
         else
-          echo "redis$SENTINELNAME $PIDFILE doesn't exist"
+          echo "redis$SENTINELNAME doesn't exist"
           exit 3
         fi
         ;;
     start)
-        if [ -f $PIDFILE ]
+        if [ X"$PID" = X ]
         then
-                echo "$PIDFILE exists, process is already running or crashed"
+                echo "$PID exists, process is already running"
+                echo "$PID" > "$PIDFILE"
         else
                 echo "Starting Redis server..."
                 eval $EXEC
+                PID=`ps -ef | grep 'redis' | grep ':26379' | awk '{print $2}'`
+                echo "$PID" > "$PIDFILE"
         fi
         ;;
     stop)
-        if [ ! -f $PIDFILE ]
+        if [ X"$PID" = X ]
         then
-                echo "$PIDFILE does not exist, process is not running"
+                echo "$PID does not exist, process is not running"
         else
-                PID=$(cat $PIDFILE)
                 echo "Stopping ..."
 
                 kill ${PID}

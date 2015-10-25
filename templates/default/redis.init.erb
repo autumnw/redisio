@@ -35,6 +35,8 @@ CLIEXEC=<%= File.join(@bin_path, 'redis-cli') %>
 
 PIDFILE=<%= @piddir %>/redis_${REDISNAME}.pid
 
+PID=`ps -ef | grep 'redis' | grep ':6379' | awk '{print $2}'`
+
 if [ ! -d <%= @piddir %> ]; then
     mkdir -p <%= @piddir %>
     chown <%= @user %>  <%= @piddir %>
@@ -55,20 +57,26 @@ case "$1" in
         fi
         ;;
     start)
-        if [ -f $PIDFILE ]
+        if [ X"$PID" = X ]
         then
-                echo "$PIDFILE exists, process is already running or crashed"
+            echo "Starting Redis server..."
+            eval $EXEC
+            PID=`ps -ef | grep 'redis' | grep ':6379' | awk '{print $2}'`
+            echo $PID > $PIDFILE
         else
-                echo "Starting Redis server..."
-                eval $EXEC
+        	echo "process is already running"
+            if [ ! -f "$PIDFILE" ];then
+            	echo $PID > $PIDFILE
+            fi
         fi
         ;;
     stop)
-        if [ ! -f $PIDFILE ]
+        if [ X"$PID" = X ]
         then
-                echo "$PIDFILE does not exist, process is not running"
+                echo "process is not running"
+                echo "" > $PIDFILE
         else
-                PID=$(cat $PIDFILE)
+                #PID=$(cat $PIDFILE)
                 echo "Stopping ..."
 
                 <%= "$CLIEXEC #{connection_string} save" if @shutdown_save %>
