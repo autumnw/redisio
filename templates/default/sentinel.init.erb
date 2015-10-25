@@ -42,7 +42,7 @@ case "$1" in
         fi
         ;;
     start)
-        if [ X"$PID" = X ]
+        if [ ! X"$PID" = X ]
         then
                 echo "$PID exists, process is already running"
                 echo "$PID" > "$PIDFILE"
